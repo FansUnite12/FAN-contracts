@@ -1,8 +1,11 @@
-var ConvertLib = artifacts.require("./ConvertLib.sol");
-var MetaCoin = artifacts.require("./MetaCoin.sol");
+let FansUniteToken = artifacts.require("./FansUniteToken.sol");
+let FansUniteCrowdfund = artifacts.require("./FansUniteCrowdfund.sol");
 
-module.exports = function(deployer) {
-  deployer.deploy(ConvertLib);
-  deployer.link(ConvertLib, MetaCoin);
-  deployer.deploy(MetaCoin);
+module.exports = async (deployer) => {
+
+    deployer.deploy(SafeMath);
+    await deployer.deploy(FansUniteToken);
+    await deployer.deploy(FansUniteCrowdfund, FansUniteToken.address);
+
+    deployer.link(SafeMath, [FansUniteToken, FansUniteCrowdfund]);
 };

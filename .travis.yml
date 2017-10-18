@@ -1,0 +1,19 @@
+sudo: required
+
+dist: trusty
+
+language: node_js
+
+node_js:
+  - "7"
+
+before_install:
+  - npm install -g ethereumjs-testrpc truffle truffle-expect truffle-config web3
+
+
+script:
+  - testrpc > /dev/null &
+  - truffle test
+
+notifications:
+  email: false
