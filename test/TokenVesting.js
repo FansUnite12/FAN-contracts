@@ -1,5 +1,4 @@
 const FansUniteToken = artifacts.require('FansUniteToken.sol');
-const FansUniteCrowdfund = artifacts.require('FansUniteCrowdfund.sol');
 const TokenVesting = artifacts.require('TokenVesting.sol');
 const Utils = require('./helpers/Utils.js');
 const BigNumber = web3.BigNumber;
