@@ -102,7 +102,7 @@ contract FansUniteCrowdfund is Ownable {
         weiRaised = weiRaised.add(weiAmount);
         tokensSold = tokensSold.add(tokens);
         token.mint(msg.sender, tokens);
-        beneficiary.transfer(weiRaised);
+        beneficiary.transfer(msg.value);
         NewContribution(_owner, tokens, weiAmount);
     }
 
