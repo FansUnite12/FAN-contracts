@@ -20,7 +20,6 @@ let crowdfund;
 let maxSupply;
 
 let token;
-let id;
 
 contract('FansUniteCrowdsale', (accounts) => {
 
