@@ -12,6 +12,8 @@ contract FansUniteCrowdfund is Ownable {
 
     address public beneficiary;
 
+    uint constant MULTIPLIER = 10**24;
+
     uint public weiRaised = 0;
     uint public tokensSold = 0;
 
@@ -37,7 +39,6 @@ contract FansUniteCrowdfund is Ownable {
     bool public minCapReached = false;
 
     event NewContribution(address indexed holder, uint256 tokens, uint256 contributed);
-    event MinGoalReached(uint amountRaised);
 
     modifier onlyDuringSale {
         require(now >= startTime(msg.sender));
@@ -67,20 +68,21 @@ contract FansUniteCrowdfund is Ownable {
     address _vestingAddress,
     address _incentivisationAddress,
     address _platformSupplyAddress,
-    address _unsoldSupplyAddress
+    address _unsoldSupplyAddress,
+    uint _startsAt
     ) {
         token = FansUniteToken(_tokenAddress);
 
         beneficiary = _beneficiary;                             // FansUnite Multisig Wallet Address
 
         whitelistStartsAt = 1509699600;                         // November 3 2017, 9:00 AM UTC
-        startsAt = 1510131600;                                  // November 8 2017, 9:00 AM UTC
-        endsAt = 1512550800;                                    // ~4 weeks / 28 days later: December 6, 2017, 9:00 AM UTC
+        startsAt = _startsAt;                                   // November 8 2017, 9:00 AM UTC
+        endsAt = startsAt + 4 weeks;                            // ~4 weeks / 28 days later: December 6, 2017, 9:00 AM UTC
 
-        vestingSupply = 70 * 10**24;                            // 10% - 70 million for withheld for FansUnite Team
-        incentivisationSupply = 80 * 10**24;                    // 11% - 80 million incentivisation (bounty, advisors, presale bonus)
-        platformSupply = 200 * 10**24;                          // 29% - 200 million for platform supply pool
-        icoSupply = 350 * 10**24;                               // 50% - 350 million for public sale
+        vestingSupply = 70 * MULTIPLIER;                        // 10% - 70 million for withheld for FansUnite Team
+        incentivisationSupply = 80 * MULTIPLIER;                // 11% - 80 million incentivisation (bounty, advisors, presale bonus)
+        platformSupply = 200 * MULTIPLIER;                      // 29% - 200 million for platform supply pool
+        icoSupply = 350 * MULTIPLIER;                           // 50% - 350 million for public sale
 
         vestingAddress = _vestingAddress;
         incentivisationAddress = _incentivisationAddress;
