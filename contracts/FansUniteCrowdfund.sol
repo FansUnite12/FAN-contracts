@@ -90,20 +90,22 @@ contract FansUniteCrowdfund is Ownable {
     }
 
     function () payable {
-        doPurchase(msg.sender);
+        doPurchase();
     }
 
-    function doPurchase(address _owner) internal onlyDuringSale tokenCapNotReached {
+    function doPurchase() internal onlyDuringSale tokenCapNotReached {
         require (msg.value > 0);
 
         uint weiAmount = msg.value;
         uint tokens = weiAmount.mul(getRate());
 
+        require(tokensSold.add(tokens) <= icoSupply);
+
         weiRaised = weiRaised.add(weiAmount);
         tokensSold = tokensSold.add(tokens);
         token.mint(msg.sender, tokens);
-        beneficiary.transfer(weiRaised);
-        NewContribution(_owner, tokens, weiAmount);
+        beneficiary.transfer(weiAmount);
+        NewContribution(msg.sender, tokens, weiAmount);
     }
 
 
