@@ -1,6 +1,7 @@
 const FansUniteToken = artifacts.require('FansUniteToken.sol');
 const FansUniteCrowdfund = artifacts.require('FansUniteCrowdfund.sol');
 const Utils = require('./helpers/Utils.js');
+const BigNumber = web3.BigNumber;
 
 
 let owner;
@@ -16,6 +17,7 @@ let presaleAddresses;
 let whitelistAddress;
 
 let crowdfund;
+let startsAt;
 
 let maxSupply;
 
@@ -41,6 +43,7 @@ contract('FansUniteCrowdsale', (accounts) => {
         ];
         whitelistAddress = accounts[11];
         maxSupply = 700 * 10**24;
+        startsAt =  Utils.latestTime() + Utils.duration.minutes(2); // +2 minute so it starts after contract instantiation
 
         token = await FansUniteToken.new('FansUnite Token', 'FAN', maxSupply, {from: owner});
 
@@ -51,6 +54,7 @@ contract('FansUniteCrowdsale', (accounts) => {
             incentivisationAddress,
             platformSupplyAddress,
             unsoldSupplyAddress,
+            startsAt,
             {from: owner}
         );
         token.transferOwnership(crowdfund.address);
@@ -60,10 +64,15 @@ contract('FansUniteCrowdsale', (accounts) => {
     describe('Constructor', function(){
 
         it("Crowdfund should have the correct supply values", async() => {
-            assert.equal(await crowdfund.vestingSupply.call(), 70 * 10**24);
-            //assert.equal(await crowdfund.incentivisationSupply.call(), 80 * 10**24);
-            assert.equal(await crowdfund.platformSupply.call(), 200 * 10**24);
-            assert.equal(await crowdfund.icoSupply.call(), 350 * 10**24);
+            let vestingSupply = 70 * 10**24;
+            let incentivisationSupply = 8 * 10**25;
+            let platformSupply = 200 * 10**24;
+            let icoSupply = 350 * 10**24;
+
+            assert.equal(await crowdfund.vestingSupply.call(), vestingSupply);
+            assert.equal(await crowdfund.incentivisationSupply.call(), incentivisationSupply);
+            assert.equal(await crowdfund.platformSupply.call(), platformSupply);
+            assert.equal(await crowdfund.icoSupply.call(), icoSupply);
         });
 
         it("Crowdfund should have the correct addresses", async() => {
@@ -76,6 +85,7 @@ contract('FansUniteCrowdsale', (accounts) => {
     });
 
     describe('Whitelist', function(){
+
         it("addToWhitelist(): should add an address to the whitelist", async() => {
             await crowdfund.addToWhitelist(whitelistAddress, { from: owner });
             assert.equal(await crowdfund.whitelisted(whitelistAddress), true);
@@ -173,7 +183,7 @@ contract('FansUniteCrowdsale', (accounts) => {
 
             // advance time
             const oneWeekInSeconds = 604800;
-            await Utils.addSeconds(oneWeekInSeconds);
+            await Utils.addSeconds(oneWeekInSeconds + Utils.duration.minutes(1));
             await crowdfund.sendTransaction({
                 from: buyerAddress,
                 value: web3.toWei("1", "Ether")
@@ -182,7 +192,7 @@ contract('FansUniteCrowdsale', (accounts) => {
             assert.equal(Utils.convertFromDecimals(secondBalance) - Utils.convertFromDecimals(firstBalance), 2500, "The balance of the buyer was not incremented by 2500 tokens");
 
             // advance time
-            await Utils.addSeconds(oneWeekInSeconds);
+            await Utils.addSeconds(oneWeekInSeconds + Utils.duration.minutes(1));
             await crowdfund.sendTransaction({
                 from: buyerAddress,
                 value: web3.toWei("1", "Ether")
@@ -191,7 +201,7 @@ contract('FansUniteCrowdsale', (accounts) => {
             assert.equal(Utils.convertFromDecimals(thirdBalance) - Utils.convertFromDecimals(secondBalance) , 2000, "The balance of the buyer was not incremented by 2000 tokens");
 
             // advance time
-            await Utils.addSeconds(oneWeekInSeconds);
+            await Utils.addSeconds(oneWeekInSeconds+ Utils.duration.minutes(1));
             await crowdfund.sendTransaction({
                 from: buyerAddress,
                 value: web3.toWei("1", "Ether")
@@ -201,7 +211,6 @@ contract('FansUniteCrowdsale', (accounts) => {
 
             let weiRaised = await crowdfund.weiRaised.call({from: buyerAddress});
             assert.equal(Utils.convertFromDecimals(weiRaised), 4, "The contract ether balance was not 4 ETH");
-
         });
     });
 
@@ -234,21 +243,19 @@ contract('FansUniteCrowdsale', (accounts) => {
             let unsoldBalance = await token.balanceOf.call(unsoldSupplyAddress);
 
             assert.equal(
-                unsoldBalance,
-                icoSupply - tokensSold,
+                Utils.convertFromDecimals(unsoldBalance),
+                Utils.convertFromDecimals(icoSupply) - Utils.convertFromDecimals(tokensSold),
                 "The right amount wasn't minted for the unsold balance"
             );
-            /*
             assert.equal(
                 await token.balanceOf.call(incentivisationAddress),
-                80 * 10**24,
+                8 * 10**25,
                 "The right amount wasn't minted for the incentivisation balance");
-             */
 
             assert.equal(
                 await token.balanceOf.call(platformSupplyAddress),
                 200 * 10**24,
-                "The right amount wasn't minted for the incentivisation balance");
+                "The right amount wasn't minted for the platforms balance");
 
             assert.equal(
                 await token.balanceOf.call(vestingAddress),
