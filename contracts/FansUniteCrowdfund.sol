@@ -75,9 +75,9 @@ contract FansUniteCrowdfund is Ownable {
 
         beneficiary = _beneficiary;                             // FansUnite Multisig Wallet Address
 
-        whitelistStartsAt = 1509699600;                         // November 3 2017, 9:00 AM UTC
-        startsAt = _startsAt;                                   // November 8 2017, 9:00 AM UTC
-        endsAt = startsAt + 4 weeks;                            // ~4 weeks / 28 days later: December 6, 2017, 9:00 AM UTC
+        startsAt = _startsAt;
+        endsAt = startsAt + 4 weeks;
+        whitelistStartsAt = startsAt - 1 weeks;
 
         vestingSupply = 70 * MULTIPLIER;                        // 10% - 70 million for withheld for FansUnite Team
         incentivisationSupply = 80 * MULTIPLIER;                // 11% - 80 million incentivisation (bounty, advisors, presale bonus)
@@ -135,6 +135,7 @@ contract FansUniteCrowdfund is Ownable {
     function addPrecommitment(address participant, uint balance) onlyOwner tokenCapNotReached {
         require(now < startsAt);
         require(balance > 0);
+        require(tokensSold.add(balance) <= icoSupply);
         tokensSold = tokensSold.add(balance);
         token.mint(participant, balance);
     }
