@@ -11,31 +11,38 @@ import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
  * Removed cliff and revocable functionality
  */
 contract TokenVesting is Ownable {
-    using SafeMath for uint256;
+    using SafeMath for uint;
     using SafeERC20 for ERC20Basic;
 
-    event Released(uint256 amount);
+    event Released(uint amount);
 
     address public beneficiary;
-    uint256 public start;
-    uint256 public duration;
+    uint public start;
+    uint public duration;
 
-    bool public revocable;
+    uint public intervals;
+    uint public currentInterval = 1;
 
-    mapping (address => uint256) public released;
+    mapping (address => uint) public released;
 
-    function TokenVesting(address _beneficiary, uint256 _start, uint256 _duration) {
+    function TokenVesting(address _beneficiary, uint _start, uint _duration, uint _intervals) {
         require(_beneficiary != 0x0);
 
         beneficiary = _beneficiary;
         duration = _duration;           // 72 weeks
         start = _start;                 // December 6, 2017, 9:00 AM UTC
+        intervals = _intervals;
     }
 
     function release(ERC20Basic token) public {
-        uint256 unreleased = releasableAmount(token);
+        require(currentInterval <= intervals);
+        require(now >= duration.div(intervals).mul(currentInterval).add(start));
+
+        uint unreleased = releasableAmount(token);
 
         require(unreleased > 0);
+
+        currentInterval = currentInterval.add(1);
 
         released[token] = released[token].add(unreleased);
         token.safeTransfer(beneficiary, unreleased);
@@ -43,18 +50,19 @@ contract TokenVesting is Ownable {
     }
 
 
-    function releasableAmount(ERC20Basic token) public constant returns (uint256) {
+    function releasableAmount(ERC20Basic token) public constant returns (uint) {
         return vestedAmount(token).sub(released[token]);
     }
 
-    function vestedAmount(ERC20Basic token) public constant returns (uint256) {
-        uint256 currentBalance = token.balanceOf(this);
-        uint256 totalBalance = currentBalance.add(released[token]);
+    function vestedAmount(ERC20Basic token) public constant returns (uint) {
+
+        uint currentBalance = token.balanceOf(this);
+        uint totalBalance = currentBalance.add(released[token]);
 
         if (now >= start + duration) {
             return totalBalance;
-        } else {
-            return totalBalance.mul(now - start).div(duration);
         }
+        return totalBalance.div(intervals).mul(currentInterval);
     }
+
 }
