@@ -30,7 +30,7 @@ contract TokenVesting is Ownable {
 
         beneficiary = _beneficiary;
         duration = _duration;           // 72 weeks
-        start = _start;                 // December 6, 2017, 9:00 AM UTC
+        start = _start;                 // Crowdfund end date
         intervals = _intervals;
     }
 
